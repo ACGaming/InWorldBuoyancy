@@ -13,7 +13,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'net.minecrell.licenser'
 
-version = "0.3.0"
+version = "1.12.2-1.0.0"
 group = "mod.acgaming.inworldbuoyancy"
 archivesBaseName = "InWorldBuoyancy"
 

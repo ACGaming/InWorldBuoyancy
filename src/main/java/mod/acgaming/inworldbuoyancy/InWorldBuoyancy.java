@@ -10,21 +10,18 @@
 
 package mod.acgaming.inworldbuoyancy;
 
-import java.util.Random;
-import java.util.function.Predicate;
-
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.SPacketSetSlot;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.IFluidBlock;
+import net.minecraftforge.fluids.*;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -32,11 +29,13 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import mod.acgaming.inworldbuoyancy.handler.IWBHandler;
 import mod.acgaming.inworldbuoyancy.handler.IWBHandlerCustom;
-import mod.acgaming.inworldbuoyancy.utils.HopeLifter;
-import mod.acgaming.inworldbuoyancy.utils.ItemUtils;
+import mod.acgaming.inworldbuoyancy.utils.FluidReplacer;
 
 @Mod(modid = "inworldbuoyancy", name = "InWorldBuoyancy", version = "${version}", acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "after:betterwithmods")
 public class InWorldBuoyancy
@@ -46,12 +45,8 @@ public class InWorldBuoyancy
         return state.getBlock() instanceof BlockLiquid || state.getBlock() instanceof IFluidBlock;
     }
 
-    private final Random random = new Random();
-    private final int[] invLayout = {9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, 1, 2, 3, 4, 5, 6, 7, 8};
-    private final int[] invLayoutReverse = {0, 1, 2, 3, 4, 5, 6, 7, 8, 27, 28, 29, 30, 31, 32, 33, 34, 35, 18, 19, 20, 21, 22, 23, 24, 25, 26, 9, 10, 11, 12, 13, 14, 15, 16, 17};
-    private int itemMovementSpeed;
-    private boolean easyMode, hardMode;
-    private boolean liftHopesUp, liftRationaleUp;
+    private boolean omitItemInHand, floatBothWays;
+    private boolean cannotDisplaceLiquid, inWorldBuoyancy;
     private Configuration config;
     private IWBHandler handler;
 
@@ -60,11 +55,10 @@ public class InWorldBuoyancy
     {
         config = new Configuration(event.getSuggestedConfigurationFile());
 
-        easyMode = config.getBoolean("omitItemInHand", "general", false, "Exempts the item in the player's hand.");
-        hardMode = config.getBoolean("floatBothWays", "general", false, "Makes non-floating items move down as well.");
-        itemMovementSpeed = config.getInt("itemMovementSpeed", "general", 5, 1, Integer.MAX_VALUE, "The item movement speed, in ticks per slot.");
-        liftHopesUp = config.getBoolean("cannotDisplaceLiquid", "features", true, "Makes it impossible to easily displace liquid.");
-        liftRationaleUp = config.getBoolean("inventoryBuoyancy", "features", true, "Inventory is buoyant. Hah.");
+        omitItemInHand = config.getBoolean("omitItemInHand", "general", false, "Exempts the item in the player's hand.");
+        floatBothWays = config.getBoolean("floatBothWays", "general", false, "Makes non-floating items move down as well.");
+        cannotDisplaceLiquid = config.getBoolean("cannotDisplaceLiquid", "features", true, "Makes it impossible to easily displace liquids with blocks.");
+        inWorldBuoyancy = config.getBoolean("inWorldBuoyancy", "features", true, "Inventory is buoyant. Hah.");
     }
 
     @Mod.EventHandler
@@ -107,144 +101,85 @@ public class InWorldBuoyancy
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onWorldLoad(WorldEvent.Load event)
     {
-        if (liftHopesUp)
+        if (cannotDisplaceLiquid)
         {
-            event.getWorld().addEventListener(HopeLifter.INSTANCE);
+            event.getWorld().addEventListener(FluidReplacer.INSTANCE);
         }
     }
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event)
     {
-        if (!liftRationaleUp || event.player.isCreative())
+        EntityPlayer player = event.player;
+
+        if (!inWorldBuoyancy || player.isCreative())
         {
-            // FIXME: Creative mode + this can cause dupe bugs/state corruption???
             return;
         }
 
-        // TODO: Implement gaseous state
-        if (event.phase == TickEvent.Phase.END && !event.player.getEntityWorld().isRemote && event.player.isInWater() && (event.player.getEntityWorld().getTotalWorldTime() % itemMovementSpeed) == 0)
+        if (event.phase == TickEvent.Phase.END && !player.getEntityWorld().isRemote && player.isInWater() && player.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null))
         {
-            IBlockState state = event.player.getEntityWorld().getBlockState(event.player.getPosition());
-            Fluid f = FluidRegistry.lookupFluidForBlock(state.getBlock());
-
-            int changes = 0;
-
-            if (f != null && f.isGaseous())
+            if (player.ticksExisted % 20 == 0)
             {
-                changes += moveItems(event.player, invLayoutReverse, handler::isFloating);
-                if (hardMode)
+                World world = player.getEntityWorld();
+                IBlockState blockState = world.getBlockState(player.getPosition());
+                Fluid fluidAtPlayer = FluidRegistry.lookupFluidForBlock(blockState.getBlock());
+                IItemHandler itemHandler = player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
+
+                if (itemHandler != null)
                 {
-                    changes += moveItems(event.player, invLayout, (stack) -> !handler.isFloating(stack));
-                }
-            }
-            else
-            {
-                changes += moveItems(event.player, invLayout, handler::isFloating);
-                if (hardMode)
-                {
-                    changes += moveItems(event.player, invLayoutReverse, (stack) -> !handler.isFloating(stack));
-                }
-            }
-        }
-    }
-
-    private boolean move(int from, int to, EntityPlayer player, ItemStack stack)
-    {
-        ItemStack toStack = player.inventory.getStackInSlot(to);
-        if (toStack.isEmpty())
-        {
-            ItemStack cstack = stack.copy();
-            stack.setCount(0);
-            player.inventory.setInventorySlotContents(from, ItemStack.EMPTY);
-            player.inventory.setInventorySlotContents(to, cstack);
-
-            ((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-2, from, player.inventory.getStackInSlot(from)));
-            ((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-2, to, player.inventory.getStackInSlot(to)));
-            player.inventory.markDirty();
-
-            return true;
-        }
-        else if (ItemUtils.canMerge(stack, toStack))
-        {
-            int mergeSize = Math.min(stack.getCount(), toStack.getMaxStackSize() - toStack.getCount());
-            if (mergeSize <= 0)
-            {
-                return false;
-            }
-
-            ItemStack cstack = stack.copy();
-            cstack.shrink(mergeSize);
-            toStack.grow(mergeSize);
-
-            if (cstack.isEmpty())
-            {
-                cstack = ItemStack.EMPTY;
-            }
-
-            player.inventory.setInventorySlotContents(from, cstack);
-            player.inventory.setInventorySlotContents(to, toStack);
-
-            ((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-2, from, player.inventory.getStackInSlot(from)));
-            ((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(-2, to, player.inventory.getStackInSlot(to)));
-            player.inventory.markDirty();
-
-            return cstack == ItemStack.EMPTY;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    private int moveItems(EntityPlayer player, int[] layout, Predicate<ItemStack> predicate)
-    {
-        int changes = 0;
-
-        for (int i = 9; i < layout.length; i++)
-        {
-            if (easyMode && layout[i] == player.inventory.currentItem)
-            {
-                continue;
-            }
-
-            ItemStack stack = player.inventory.getStackInSlot(layout[i]);
-            if (stack.isEmpty())
-            {
-                continue;
-            }
-
-            if (predicate.test(stack))
-            {
-                boolean moved = move(layout[i], layout[i - 9], player, stack);
-                if (!moved)
-                {
-                    int offset = random.nextInt(2);
-                    for (int ii = offset; ii < offset + 2 && !moved; ii++)
+                    for (int i = 0; i < itemHandler.getSlots(); i++)
                     {
-                        switch (ii % 2)
+                        ItemStack itemStack = itemHandler.extractItem(i, Integer.MAX_VALUE, true);
+
+                        if (!itemStack.isEmpty())
                         {
-                            case 0:
-                                if ((i % 9) > 0)
+                            if (omitItemInHand && player.inventory.getCurrentItem() == itemStack)
+                            {
+                                return;
+                            }
+                            if (handler.isFloating(itemStack) || floatBothWays && !handler.isFloating(itemStack))
+                            {
+                                player.dropItem(itemStack, true, false);
+                                player.inventory.decrStackSize(i, itemStack.getCount());
+                            }
+                            else if (itemStack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
+                            {
+                                IFluidHandlerItem fluidHandler = itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+
+                                if (fluidHandler != null)
                                 {
-                                    moved = move(layout[i], layout[i - 1 - 9], player, stack);
+                                    FluidStack fluidStack = fluidHandler.drain(Fluid.BUCKET_VOLUME, false);
+                                    FluidActionResult result = null;
+
+                                    if (fluidStack != null && fluidStack.getFluid() != fluidAtPlayer)
+                                    {
+                                        result = FluidUtil.tryPlaceFluid(player, world, player.getPosition().down(), itemStack, fluidStack);
+                                    }
+                                    else
+                                    {
+                                        itemStack = fluidHandler.getContainer();
+                                        itemStack.setCount(1);
+                                        fluidHandler = FluidUtil.getFluidHandler(itemStack);
+                                        if (fluidHandler != null)
+                                        {
+                                            result = FluidUtil.tryPickUpFluid(fluidHandler.getContainer(), player, world, player.getPosition().down(), EnumFacing.UP);
+                                        }
+                                    }
+                                    if (result != null)
+                                    {
+                                        if (result.isSuccess())
+                                        {
+                                            itemHandler.extractItem(i, 1, false);
+                                            ItemHandlerHelper.giveItemToPlayer(player, result.getResult(), i);
+                                        }
+                                    }
                                 }
-                                break;
-                            case 1:
-                                if ((i % 9) < 8)
-                                {
-                                    moved = move(layout[i], layout[i + 1 - 9], player, stack);
-                                }
-                                break;
+                            }
                         }
                     }
-                    if (moved)
-                    {
-                        changes++;
-                    }
                 }
             }
         }
-        return changes;
     }
 }

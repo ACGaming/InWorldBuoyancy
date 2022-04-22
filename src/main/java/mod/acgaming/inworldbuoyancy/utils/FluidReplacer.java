@@ -27,12 +27,12 @@ import net.minecraftforge.fluids.FluidRegistry;
 
 import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
 
-public class HopeLifter implements IWorldEventListener
+public class FluidReplacer implements IWorldEventListener
 {
-    public static final HopeLifter INSTANCE = new HopeLifter();
+    public static final FluidReplacer INSTANCE = new FluidReplacer();
     public static boolean checkingForMixing = false;
 
-    private HopeLifter()
+    private FluidReplacer()
     {
 
     }
@@ -47,7 +47,6 @@ public class HopeLifter implements IWorldEventListener
 
         if (oldState.getBlock() != newState.getBlock() && InWorldBuoyancy.isLiquid(oldState) && newState.getMaterial() != Material.AIR && !newState.getBlock().isReplaceable(worldIn, oPos))
         {
-
             Fluid f = FluidRegistry.lookupFluidForBlock(oldState.getBlock());
             boolean isGaseous = f != null && f.isGaseous();
 
