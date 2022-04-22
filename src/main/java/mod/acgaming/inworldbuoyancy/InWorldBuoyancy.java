@@ -154,7 +154,7 @@ public class InWorldBuoyancy
 
                                     if (fluidStack != null && fluidStack.getFluid() != fluidAtPlayer)
                                     {
-                                        result = FluidUtil.tryPlaceFluid(player, world, player.getPosition().down(), itemStack, fluidStack);
+                                        result = FluidUtil.tryPlaceFluid(player, world, player.getPosition(), itemStack, fluidStack);
                                     }
                                     else
                                     {
@@ -163,7 +163,7 @@ public class InWorldBuoyancy
                                         fluidHandler = FluidUtil.getFluidHandler(itemStack);
                                         if (fluidHandler != null)
                                         {
-                                            result = FluidUtil.tryPickUpFluid(fluidHandler.getContainer(), player, world, player.getPosition().down(), EnumFacing.UP);
+                                            result = FluidUtil.tryPickUpFluid(fluidHandler.getContainer(), player, world, player.getPosition(), EnumFacing.UP);
                                         }
                                     }
                                     if (result != null)
