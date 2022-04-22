@@ -1,0 +1,12 @@
+[
+  {
+    "modid": "inworldbuoyancy",
+    "name": "In-World Buoyancy",
+    "description": "Memes have gone too far",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/ACGaming/InWorldBuoyancy",
+    "authorList": ["ACGaming"],
+    "credits": "asiekierka"
+  }
+]

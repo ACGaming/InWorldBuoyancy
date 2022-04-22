@@ -37,7 +37,7 @@ import mod.acgaming.inworldbuoyancy.handler.IWBHandler;
 import mod.acgaming.inworldbuoyancy.handler.IWBHandlerCustom;
 import mod.acgaming.inworldbuoyancy.utils.FluidReplacer;
 
-@Mod(modid = "inworldbuoyancy", name = "InWorldBuoyancy", version = "${version}", acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "after:betterwithmods")
+@Mod(modid = "inworldbuoyancy", name = "In-World Buoyancy", version = "${version}", acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "after:betterwithmods")
 public class InWorldBuoyancy
 {
     public static boolean isLiquid(IBlockState state)
