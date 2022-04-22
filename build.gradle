@@ -14,8 +14,8 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'net.minecrell.licenser'
 
 version = "0.3.0"
-group = "pl.asie.inventorybuoyancy"
-archivesBaseName = "WorldBuoyancy"
+group = "mod.acgaming.inworldbuoyancy"
+archivesBaseName = "InWorldBuoyancy"
 
 sourceCompatibility = targetCompatibility = '1.8'
 compileJava {
@@ -34,7 +34,7 @@ dependencies {
 }
 
 minecraft {
-    version = "1.12.2-14.23.2.2651"
+    version = "1.12.2-14.23.5.2847"
     runDir = "run"
     
     mappings = "snapshot_20180331"

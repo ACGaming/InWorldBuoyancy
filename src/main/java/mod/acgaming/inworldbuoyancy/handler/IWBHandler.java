@@ -8,7 +8,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package pl.asie.inventorybuoyancy;
+package mod.acgaming.inworldbuoyancy.handler;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -17,24 +17,28 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.HashMap;
-import java.util.Map;
+public class IWBHandler
+{
+    public boolean isFloating(ItemStack stack)
+    {
+        Item item = stack.getItem();
+        if (item instanceof ItemBlock)
+        {
+            Block block = ((ItemBlock) item).getBlock();
+            return (block.getDefaultState().getMaterial() == Material.WOOD);
+        }
+        else
+        {
+            for (int i : OreDictionary.getOreIDs(stack))
+            {
+                String n = OreDictionary.getOreName(i);
+                if (n.contains("Wood"))
+                {
+                    return true;
+                }
+            }
+        }
 
-public class IBHandler {
-	public boolean isFloating(ItemStack stack) {
-		Item item = stack.getItem();
-		if (item instanceof ItemBlock) {
-			Block block = ((ItemBlock) item).getBlock();
-			return (block.getDefaultState().getMaterial() == Material.WOOD);
-		} else {
-			for (int i : OreDictionary.getOreIDs(stack)) {
-				String n = OreDictionary.getOreName(i);
-				if (n.contains("Wood")) {
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
+        return false;
+    }
 }
