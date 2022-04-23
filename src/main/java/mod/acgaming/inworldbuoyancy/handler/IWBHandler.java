@@ -10,10 +10,6 @@
 
 package mod.acgaming.inworldbuoyancy.handler;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -22,7 +18,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fluids.*;
@@ -33,65 +28,45 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.oredict.OreDictionary;
 
 import betterwithmods.module.hardcore.world.HCBuoy;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
 import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
+import mod.acgaming.inworldbuoyancy.config.IWBBuoyancyList;
 import mod.acgaming.inworldbuoyancy.config.IWBConfig;
+import mod.acgaming.inworldbuoyancy.config.IWBTransformList;
 import mod.acgaming.inworldbuoyancy.util.IWBFluidReplacer;
 
 @Mod.EventBusSubscriber(modid = InWorldBuoyancy.MODID)
 public class IWBHandler
 {
-    private static final Set<Item> itemSet = Collections.newSetFromMap(new IdentityHashMap<>());
-    private static final TIntSet oreSet = new TIntHashSet();
-
-    public static boolean isFloating(ItemStack stack)
+    public static boolean isFloating(ItemStack itemStack)
     {
-        Item item = stack.getItem();
+        Item item = itemStack.getItem();
         if (item instanceof ItemBlock)
         {
-            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking " + stack.getItem().getRegistryName() + " for ItemBlock with Material.WOOD...");
+            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking " + item.getRegistryName() + " for ItemBlock with Material.WOOD...");
             Block block = ((ItemBlock) item).getBlock();
             return (block.getDefaultState().getMaterial() == Material.WOOD);
         }
         else
         {
-            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking " + stack.getItem().getRegistryName() + " for ore dictionary entries containing 'wood'...");
-            for (int i : OreDictionary.getOreIDs(stack))
+            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking " + item.getRegistryName() + " for ore dictionary entries containing 'wood'...");
+            for (int i : OreDictionary.getOreIDs(itemStack))
             {
                 String oreName = OreDictionary.getOreName(i);
                 if (oreName.toLowerCase().contains("wood")) return true;
             }
         }
-        if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking for custom config entries...");
         if (IWBConfig.customBuoyancyList.length > 0)
         {
-            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(IWBConfig.customBuoyancyList.length + " custom config entries found!");
-            for (String s : IWBConfig.customBuoyancyList)
-            {
-                if (s.indexOf(':') >= 0)
-                {
-                    ResourceLocation loc = new ResourceLocation(s);
-                    if (ForgeRegistries.ITEMS.containsKey(loc)) itemSet.add(ForgeRegistries.ITEMS.getValue(new ResourceLocation(s)));
-                }
-                else oreSet.add(OreDictionary.getOreID(s));
-            }
-            if (itemSet.contains(stack.getItem())) return true;
-            else
-            {
-                for (int i : OreDictionary.getOreIDs(stack)) if (oreSet.contains(i)) return true;
-                return false;
-            }
+            return IWBBuoyancyList.check(itemStack);
         }
         if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking for Better With Mods buoyancy...");
-        if (Loader.isModLoaded("betterwithmods")) return HCBuoy.getBuoyancy(stack) > 0.5F;
+        if (Loader.isModLoaded("betterwithmods")) return HCBuoy.getBuoyancy(itemStack) > 0.5F;
         return false;
     }
 
@@ -122,7 +97,7 @@ public class IWBHandler
 
                         if (!itemStack.isEmpty())
                         {
-                            if (IWBConfig.omitItemInHand && player.inventory.getCurrentItem() == itemStack)
+                            if (IWBConfig.omitItemInHand && player.inventory.currentItem == i)
                             {
                                 return;
                             }
@@ -130,6 +105,12 @@ public class IWBHandler
                             {
                                 player.dropItem(itemStack, true, false);
                                 player.inventory.decrStackSize(i, itemStack.getCount());
+                            }
+                            else if (IWBConfig.customTransformList.length > 0 && IWBTransformList.hasTransformItem(itemStack))
+                            {
+                                ItemStack itemStackNew = IWBTransformList.getTransformItem(itemStack);
+                                itemHandler.extractItem(i, 1, false);
+                                ItemHandlerHelper.giveItemToPlayer(player, itemStackNew, i);
                             }
                             else if (itemStack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
                             {

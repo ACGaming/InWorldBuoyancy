@@ -15,6 +15,9 @@ import org.apache.logging.log4j.Logger;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
+import mod.acgaming.inworldbuoyancy.config.IWBBuoyancyList;
+import mod.acgaming.inworldbuoyancy.config.IWBTransformList;
+
 @Mod(modid = InWorldBuoyancy.MODID, name = InWorldBuoyancy.NAME, version = "${version}", acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "after:betterwithmods")
 public class InWorldBuoyancy
 {
@@ -25,6 +28,12 @@ public class InWorldBuoyancy
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
+        IWBBuoyancyList.list();
+        LOGGER.info("Buoyancy List Initialized");
+
+        IWBTransformList.list();
+        LOGGER.info("Transform List Initialized");
+
         LOGGER.info("IWB Initialized");
     }
 }
