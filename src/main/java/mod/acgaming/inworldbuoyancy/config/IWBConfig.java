@@ -38,14 +38,12 @@ public class IWBConfig
     @Config.Comment({"Inventory is buoyant. Hah.", "Default = true"})
     public static boolean inWorldBuoyancy = true;
 
-    @Config.RequiresMcRestart
     @Config.Name("Custom buoyancy list")
-    @Config.Comment({"Custom list of items to float. If empty, default handler is used.", "Use registry names (with :) or ore dictionary IDs (without :)."})
-    public static String[] customBuoyancyList = {};
+    @Config.Comment({"Custom list of items to float.", "Use registry names (with :) or ore dictionary IDs (without :)."})
+    public static String[] customBuoyancyList = {"minecraft:stick"};
 
-    @Config.RequiresMcRestart
     @Config.Name("Custom transform list")
-    @Config.Comment({"Custom list of items to transform. If empty, default handler is used.", "Use registry names (with :).", "Use --> as a separator."})
+    @Config.Comment({"Custom list of items to transform.", "Use registry names (with :).", "Use --> as a separator."})
     public static String[] customTransformList = {"minecraft:book-->minecraft:paper"};
 
     @Config.Name("Debug mode")
@@ -61,6 +59,13 @@ public class IWBConfig
             if (event.getModID().equals(InWorldBuoyancy.MODID))
             {
                 ConfigManager.sync(InWorldBuoyancy.MODID, Config.Type.INSTANCE);
+                InWorldBuoyancy.LOGGER.info("Config Synced");
+
+                IWBBuoyancyList.list();
+                InWorldBuoyancy.LOGGER.info("Buoyancy List Reloaded");
+
+                IWBTransformList.list();
+                InWorldBuoyancy.LOGGER.info("Transform List Reloaded");
             }
         }
     }
