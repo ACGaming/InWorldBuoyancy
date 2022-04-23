@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017, 2018 Adrian Siekierka
+ * Copyright (C) 2017, 2018, 2022 Adrian Siekierka, ACGaming
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -8,10 +8,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package mod.acgaming.inworldbuoyancy.utils;
+package mod.acgaming.inworldbuoyancy.util;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -24,15 +25,19 @@ import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.IFluidBlock;
 
-import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
-
-public class FluidReplacer implements IWorldEventListener
+public class IWBFluidReplacer implements IWorldEventListener
 {
-    public static final FluidReplacer INSTANCE = new FluidReplacer();
+    public static final IWBFluidReplacer INSTANCE = new IWBFluidReplacer();
     public static boolean checkingForMixing = false;
 
-    private FluidReplacer()
+    public static boolean isLiquid(IBlockState state)
+    {
+        return state.getBlock() instanceof BlockLiquid || state.getBlock() instanceof IFluidBlock;
+    }
+
+    private IWBFluidReplacer()
     {
 
     }
@@ -45,7 +50,7 @@ public class FluidReplacer implements IWorldEventListener
             return;
         }
 
-        if (oldState.getBlock() != newState.getBlock() && InWorldBuoyancy.isLiquid(oldState) && newState.getMaterial() != Material.AIR && !newState.getBlock().isReplaceable(worldIn, oPos))
+        if (oldState.getBlock() != newState.getBlock() && isLiquid(oldState) && newState.getMaterial() != Material.AIR && !newState.getBlock().isReplaceable(worldIn, oPos))
         {
             Fluid f = FluidRegistry.lookupFluidForBlock(oldState.getBlock());
             boolean isGaseous = f != null && f.isGaseous();
@@ -66,7 +71,7 @@ public class FluidReplacer implements IWorldEventListener
                 while (worldIn.isValid(pos) && i > 0)
                 {
                     IBlockState state = worldIn.getBlockState(pos);
-                    if (!InWorldBuoyancy.isLiquid(state) && state.getBlock().isReplaceable(worldIn, pos))
+                    if (!isLiquid(state) && state.getBlock().isReplaceable(worldIn, pos))
                     {
                         break;
                     }
