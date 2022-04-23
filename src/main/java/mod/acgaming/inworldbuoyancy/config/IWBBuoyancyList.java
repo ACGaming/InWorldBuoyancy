@@ -34,14 +34,14 @@ public class IWBBuoyancyList
         if (IWBConfig.customBuoyancyList.length > 0)
         {
             if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(IWBConfig.customBuoyancyList.length + " custom config entries found!");
-            for (String s : IWBConfig.customBuoyancyList)
+            for (String id : IWBConfig.customBuoyancyList)
             {
-                if (s.indexOf(':') >= 0)
+                if (id.indexOf(':') >= 0)
                 {
-                    ResourceLocation loc = new ResourceLocation(s);
-                    if (ForgeRegistries.ITEMS.containsKey(loc)) itemSet.add(ForgeRegistries.ITEMS.getValue(new ResourceLocation(s)));
+                    ResourceLocation loc = new ResourceLocation(id);
+                    if (ForgeRegistries.ITEMS.containsKey(loc)) itemSet.add(ForgeRegistries.ITEMS.getValue(new ResourceLocation(id)));
                 }
-                else oreSet.add(OreDictionary.getOreID(s));
+                else oreSet.add(OreDictionary.getOreID(id));
             }
         }
     }

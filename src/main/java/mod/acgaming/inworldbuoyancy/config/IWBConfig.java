@@ -43,7 +43,7 @@ public class IWBConfig
     public static String[] customBuoyancyList = {"minecraft:stick"};
 
     @Config.Name("Custom transform list")
-    @Config.Comment({"Custom list of items to transform.", "Use registry names (with :).", "Use --> as a separator."})
+    @Config.Comment({"Custom list of items to transform.", "Use registry names (with :) or ore dictionary IDs (input only, without :).", "Use --> as a separator."})
     public static String[] customTransformList = {"minecraft:book-->minecraft:paper"};
 
     @Config.Name("Debug mode")

@@ -10,12 +10,14 @@
 
 package mod.acgaming.inworldbuoyancy.config;
 
+import java.lang.reflect.Array;
 import java.util.Map;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.oredict.OreDictionary;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
@@ -23,6 +25,8 @@ import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
 public class IWBTransformList
 {
     private static final Map<Item, Item> transformMap = new Object2ObjectOpenHashMap<>();
+    private static final Map<Integer, Item> oreDictMap = new Object2ObjectOpenHashMap<>();
+    private static int oreID;
 
     public static void list()
     {
@@ -36,24 +40,57 @@ public class IWBTransformList
 
                 if (colonIndex == -1 || arrowIndex == -1) throw new IllegalArgumentException(id + " is not valid! Check config comment for formatting tips!");
 
-                ResourceLocation locInputItem = new ResourceLocation(id.substring(0, arrowIndex));
-                if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(locInputItem);
-
+                // ITEM OUTPUT
                 ResourceLocation locOutputItem = new ResourceLocation(id.substring(arrowIndex + 3));
                 if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(locOutputItem);
 
-                if (ForgeRegistries.ITEMS.containsKey(locInputItem) && ForgeRegistries.ITEMS.containsKey(locOutputItem)) transformMap.put(ForgeRegistries.ITEMS.getValue(locInputItem), ForgeRegistries.ITEMS.getValue(locOutputItem));
+                // ORE DICTIONARY ITEM INPUT
+                if (OreDictionary.doesOreNameExist(id.substring(0, arrowIndex)) && ForgeRegistries.ITEMS.containsKey(locOutputItem))
+                {
+                    if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("getOreID: " + OreDictionary.getOreID(id.substring(0, arrowIndex)));
+                    oreDictMap.put(OreDictionary.getOreID(id.substring(0, arrowIndex)), ForgeRegistries.ITEMS.getValue(locOutputItem));
+                }
+                // REGULAR ITEM INPUT
+                else if (id.indexOf(':') >= 0)
+                {
+                    ResourceLocation locInputItem = new ResourceLocation(id.substring(0, arrowIndex));
+                    if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(locInputItem);
+                    if (ForgeRegistries.ITEMS.containsKey(locInputItem) && ForgeRegistries.ITEMS.containsKey(locOutputItem))
+                    {
+                        transformMap.put(ForgeRegistries.ITEMS.getValue(locInputItem), ForgeRegistries.ITEMS.getValue(locOutputItem));
+                    }
+                }
             }
         }
     }
 
     public static boolean hasTransformItem(ItemStack itemStack)
     {
-        return transformMap.get(itemStack.getItem()) != null;
+        if (transformMap.get(itemStack.getItem()) != null) return true;
+        else
+        {
+            for (int i = 0; i < OreDictionary.getOreIDs(itemStack).length; i++)
+            {
+                oreID = (int) Array.get(OreDictionary.getOreIDs(itemStack), i);
+                if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("oreID: " + oreID);
+                if (oreDictMap.get(oreID) != null) return true;
+            }
+        }
+        return false;
     }
 
     public static ItemStack getTransformItem(ItemStack itemStack)
     {
-        return new ItemStack(transformMap.get(itemStack.getItem()));
+        if (transformMap.get(itemStack.getItem()) != null)
+        {
+            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("transformMap: " + transformMap.get(itemStack.getItem()));
+            return new ItemStack(transformMap.get(itemStack.getItem()));
+        }
+        else if (oreDictMap.get(oreID) != null)
+        {
+            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("oreDictMap: " + oreDictMap.get(oreID));
+            return new ItemStack(oreDictMap.get(oreID));
+        }
+        return null;
     }
 }
