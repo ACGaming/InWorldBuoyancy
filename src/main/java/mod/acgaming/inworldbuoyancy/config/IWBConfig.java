@@ -22,7 +22,7 @@ import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
 public class IWBConfig
 {
     @Config.Name("Omit item in hand")
-    @Config.Comment({"Exempts the item in the player's hand.", "Default = false"})
+    @Config.Comment({"[Not implemented] Exempts the item in the player's hand.", "Default = false"})
     public static boolean omitItemInHand = false;
 
     @Config.Name("Float both ways")
@@ -31,8 +31,8 @@ public class IWBConfig
 
     @Config.RequiresWorldRestart
     @Config.Name("Cannot displace liquid")
-    @Config.Comment({"Makes it impossible to easily displace liquids with blocks.", "Default = true"})
-    public static boolean cannotDisplaceLiquid = true;
+    @Config.Comment({"[Experimental] Makes it impossible to easily displace liquids with blocks.", "Default = true"})
+    public static boolean cannotDisplaceLiquid = false;
 
     @Config.Name("In-world buoyancy")
     @Config.Comment({"Inventory is buoyant. Hah.", "Default = true"})
@@ -49,6 +49,10 @@ public class IWBConfig
     @Config.Name("Debug mode")
     @Config.Comment({"Should the debug mode of the IWB logger be enabled?"})
     public static boolean debug = false;
+
+    @Config.Name("Handle fluid containers")
+    @Config.Comment({"Fluid containers pour their contents and get filled with water", "Default = true"})
+    public static boolean handleFluidContainers = true;
 
     @Mod.EventBusSubscriber(modid = InWorldBuoyancy.MODID)
     public static class EventHandler

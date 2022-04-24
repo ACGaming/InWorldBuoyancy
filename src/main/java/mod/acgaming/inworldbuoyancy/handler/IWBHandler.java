@@ -18,6 +18,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fluids.*;
@@ -85,11 +86,16 @@ public class IWBHandler
             if (player.ticksExisted % 20 == 0)
             {
                 World world = player.getEntityWorld();
-                IBlockState blockState = world.getBlockState(player.getPosition());
-                Fluid fluidAtPlayer = FluidRegistry.lookupFluidForBlock(blockState.getBlock());
+                BlockPos positionAtPlayer = player.getPosition();
+                BlockPos positionOverPlayer = player.getPosition().up();
+                BlockPos positionUnderPlayer = player.getPosition().down();
+                IBlockState blockStateAtPlayer = world.getBlockState(positionAtPlayer);
+                IBlockState blockStateOverPlayer = world.getBlockState(positionOverPlayer);
+                IBlockState blockStateUnderPlayer = world.getBlockState(positionUnderPlayer);
+                Fluid fluidAtPlayer = FluidRegistry.lookupFluidForBlock(blockStateAtPlayer.getBlock());
                 IItemHandler itemHandler = player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
 
-                if (itemHandler != null)
+                if (itemHandler != null && blockStateOverPlayer.getMaterial() == Material.WATER)
                 {
                     for (int i = 0; i < itemHandler.getSlots(); i++)
                     {
@@ -97,22 +103,15 @@ public class IWBHandler
 
                         if (!itemStack.isEmpty())
                         {
-                            if (IWBConfig.omitItemInHand && player.inventory.currentItem == i)
-                            {
-                                return;
-                            }
-                            if (isFloating(itemStack) || IWBConfig.floatBothWays && !isFloating(itemStack))
-                            {
-                                player.dropItem(itemStack, true, false);
-                                player.inventory.decrStackSize(i, itemStack.getCount());
-                            }
-                            else if (IWBConfig.customTransformList.length > 0 && IWBTransformList.hasTransformItem(itemStack))
+                            // TRANSFORM ITEMS
+                            if (IWBConfig.customTransformList.length > 0 && IWBTransformList.hasTransformItem(itemStack))
                             {
                                 ItemStack itemStackNew = IWBTransformList.getTransformItem(itemStack);
                                 itemHandler.extractItem(i, 1, false);
                                 ItemHandlerHelper.giveItemToPlayer(player, itemStackNew, i);
                             }
-                            else if (itemStack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
+                            // HANDLE FLUID CONTAINERS
+                            else if (IWBConfig.handleFluidContainers && itemStack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
                             {
                                 IFluidHandlerItem fluidHandler = itemStack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
 
@@ -144,6 +143,16 @@ public class IWBHandler
                                         }
                                     }
                                 }
+                            }
+                            if (IWBConfig.omitItemInHand && player.inventory.currentItem == i)
+                            {
+                                //return;
+                            }
+                            // DROP FLOATING ITEMS
+                            if (isFloating(itemStack) || IWBConfig.floatBothWays && blockStateUnderPlayer.getBlock().isReplaceable(world, positionUnderPlayer))
+                            {
+                                player.dropItem(itemStack, true, false);
+                                player.inventory.decrStackSize(i, itemStack.getCount());
                             }
                         }
                     }
