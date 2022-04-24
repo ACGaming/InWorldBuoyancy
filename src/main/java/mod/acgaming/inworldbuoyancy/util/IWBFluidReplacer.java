@@ -45,7 +45,7 @@ public class IWBFluidReplacer implements IWorldEventListener
     @Override
     public void notifyBlockUpdate(World worldIn, BlockPos oPos, IBlockState oldState, IBlockState newState, int flags)
     {
-        if (checkingForMixing)
+        if (checkingForMixing || isLiquid(worldIn.getBlockState(oPos.up())) || isLiquid(worldIn.getBlockState(oPos.down())))
         {
             return;
         }
