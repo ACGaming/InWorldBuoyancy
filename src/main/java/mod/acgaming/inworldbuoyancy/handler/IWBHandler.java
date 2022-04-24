@@ -117,11 +117,14 @@ public class IWBHandler
                         if (!itemStack.isEmpty())
                         {
                             // TRANSFORM ITEMS
-                            if (IWBConfig.customTransformList.length > 0 && IWBTransformList.hasTransformItem(itemStack))
+                            if (IWBConfig.customTransformList.length > 0)
                             {
                                 ItemStack itemStackNew = IWBTransformList.getTransformItem(itemStack);
-                                itemHandler.extractItem(i, 1, false);
-                                ItemHandlerHelper.giveItemToPlayer(player, itemStackNew, i);
+                                if (itemStackNew != null)
+                                {
+                                    itemHandler.extractItem(i, 1, false);
+                                    ItemHandlerHelper.giveItemToPlayer(player, itemStackNew, i);
+                                }
                             }
                             // HANDLE FLUID CONTAINERS
                             else if (IWBConfig.handleFluidContainers && itemStack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null))
@@ -165,7 +168,7 @@ public class IWBHandler
                             {
                                 player.dropItem(itemStack, true, false);
                                 player.inventory.decrStackSize(i, itemStack.getCount());
-                                world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_SWIM, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                                world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_SWIM, SoundCategory.BLOCKS, 0.5F, 1.0F);
                             }
                         }
                     }

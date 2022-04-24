@@ -38,6 +38,10 @@ public class IWBConfig
     @Config.Comment({"Inventory is buoyant. Hah.", "Default = true"})
     public static boolean inWorldBuoyancy = true;
 
+    @Config.Name("Handle fluid containers")
+    @Config.Comment({"Fluid containers pour their contents and get filled with water", "Default = true"})
+    public static boolean handleFluidContainers = true;
+
     @Config.Name("Custom drop list")
     @Config.Comment({"Custom list of items to drop.", "Use registry names (with :) or ore dictionary IDs (without :)."})
     public static String[] customDropList = {"minecraft:stick"};
@@ -49,10 +53,6 @@ public class IWBConfig
     @Config.Name("Debug mode")
     @Config.Comment({"Should the debug mode of the IWB logger be enabled?"})
     public static boolean debug = false;
-
-    @Config.Name("Handle fluid containers")
-    @Config.Comment({"Fluid containers pour their contents and get filled with water", "Default = true"})
-    public static boolean handleFluidContainers = true;
 
     @Mod.EventBusSubscriber(modid = InWorldBuoyancy.MODID)
     public static class EventHandler

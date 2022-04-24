@@ -64,31 +64,36 @@ public class IWBTransformList
         }
     }
 
-    public static boolean hasTransformItem(ItemStack itemStack)
+    public static boolean hasRegularItem(ItemStack itemStack)
     {
-        if (transformMap.get(itemStack.getItem()) != null) return true;
-        else
+        // CHECK TRANSFORM MAP FOR REGULAR ITEM
+        return transformMap.get(itemStack.getItem()) != null;
+    }
+
+    public static boolean hasOreDictItem(ItemStack itemStack)
+    {
+        // CHECK ORE DICT MAP FOR ORE ID
+        for (int i = 0; i < OreDictionary.getOreIDs(itemStack).length; i++)
         {
-            for (int i = 0; i < OreDictionary.getOreIDs(itemStack).length; i++)
-            {
-                oreID = (int) Array.get(OreDictionary.getOreIDs(itemStack), i);
-                if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("oreID: " + oreID);
-                if (oreDictMap.get(oreID) != null) return true;
-            }
+            oreID = (int) Array.get(OreDictionary.getOreIDs(itemStack), i);
+            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("oreID: " + oreID);
+            if (oreDictMap.get(oreID) != null) return true;
         }
         return false;
     }
 
     public static ItemStack getTransformItem(ItemStack itemStack)
     {
-        if (transformMap.get(itemStack.getItem()) != null)
+        if (hasRegularItem(itemStack))
         {
             if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("transformMap: " + transformMap.get(itemStack.getItem()));
+            // RETURN TRANSFORM STACK
             return new ItemStack(transformMap.get(itemStack.getItem()));
         }
-        else if (oreDictMap.get(oreID) != null)
+        else if (hasOreDictItem(itemStack))
         {
             if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("oreDictMap: " + oreDictMap.get(oreID));
+            // RETURN TRANSFORM STACK
             return new ItemStack(oreDictMap.get(oreID));
         }
         return null;

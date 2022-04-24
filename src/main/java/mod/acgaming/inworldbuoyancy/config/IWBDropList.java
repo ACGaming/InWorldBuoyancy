@@ -36,11 +36,13 @@ public class IWBDropList
             if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(IWBConfig.customDropList.length + " custom config entries found!");
             for (String id : IWBConfig.customDropList)
             {
+                // REGULAR ITEM WITH DOMAIN
                 if (id.indexOf(':') >= 0)
                 {
                     ResourceLocation loc = new ResourceLocation(id);
                     if (ForgeRegistries.ITEMS.containsKey(loc)) itemSet.add(ForgeRegistries.ITEMS.getValue(new ResourceLocation(id)));
                 }
+                // ORE DICTIONARY ENTRY
                 else oreSet.add(OreDictionary.getOreID(id));
             }
         }
@@ -48,7 +50,9 @@ public class IWBDropList
 
     public static boolean check(ItemStack itemStack)
     {
+        // CHECK ITEM SET FOR REGULAR ITEM
         if (itemSet.contains(itemStack.getItem())) return true;
+            // CHECK ORE SET FOR ORE ID
         else
         {
             for (int i : OreDictionary.getOreIDs(itemStack)) if (oreSet.contains(i)) return true;
