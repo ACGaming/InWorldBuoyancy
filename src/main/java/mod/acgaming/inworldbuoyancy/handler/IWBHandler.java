@@ -14,10 +14,12 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.WorldEvent;
@@ -34,10 +36,10 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.oredict.OreDictionary;
 
-import betterwithmods.module.hardcore.world.HCBuoy;
+import betterwithmods.hcbuoy.HCBuoy;
 import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
-import mod.acgaming.inworldbuoyancy.config.IWBBuoyancyList;
 import mod.acgaming.inworldbuoyancy.config.IWBConfig;
+import mod.acgaming.inworldbuoyancy.config.IWBDropList;
 import mod.acgaming.inworldbuoyancy.config.IWBTransformList;
 import mod.acgaming.inworldbuoyancy.util.IWBFluidReplacer;
 
@@ -62,12 +64,12 @@ public class IWBHandler
                 if (oreName.toLowerCase().contains("wood")) return true;
             }
         }
-        if (IWBConfig.customBuoyancyList.length > 0)
+        if (IWBConfig.customDropList.length > 0)
         {
-            return IWBBuoyancyList.check(itemStack);
+            return IWBDropList.check(itemStack);
         }
-        if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking for Better With Mods buoyancy...");
-        if (Loader.isModLoaded("betterwithmods")) return HCBuoy.getBuoyancy(itemStack) > 0.5F;
+        if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Checking for Hardcore Buoyancy...");
+        if (Loader.isModLoaded("hardcorebuoy")) return HCBuoy.getBuoyancy(itemStack) > 0.5F;
         return false;
     }
 
@@ -86,20 +88,31 @@ public class IWBHandler
             if (player.ticksExisted % 20 == 0)
             {
                 World world = player.getEntityWorld();
+
                 BlockPos positionAtPlayer = player.getPosition();
                 BlockPos positionOverPlayer = player.getPosition().up();
                 BlockPos positionUnderPlayer = player.getPosition().down();
+
                 IBlockState blockStateAtPlayer = world.getBlockState(positionAtPlayer);
                 IBlockState blockStateOverPlayer = world.getBlockState(positionOverPlayer);
                 IBlockState blockStateUnderPlayer = world.getBlockState(positionUnderPlayer);
+
                 Fluid fluidAtPlayer = FluidRegistry.lookupFluidForBlock(blockStateAtPlayer.getBlock());
                 IItemHandler itemHandler = player.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
 
                 if (itemHandler != null && blockStateOverPlayer.getMaterial() == Material.WATER)
                 {
+                    if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Get Slots: " + itemHandler.getSlots());
                     for (int i = 0; i < itemHandler.getSlots(); i++)
                     {
+                        // SKIP ARMOR SLOTS
+                        if (i == player.inventory.mainInventory.size()) i += 4;
+
+                        if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Slot Pointer: " + i);
+
                         ItemStack itemStack = itemHandler.extractItem(i, Integer.MAX_VALUE, true);
+
+                        if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug("Item Stack: " + itemStack);
 
                         if (!itemStack.isEmpty())
                         {
@@ -144,15 +157,15 @@ public class IWBHandler
                                     }
                                 }
                             }
-                            if (IWBConfig.omitItemInHand && player.inventory.currentItem == i)
+                            if (IWBConfig.omitItemInHand && (i == player.inventory.currentItem || i == player.inventory.mainInventory.size() + 4 /* OFFHAND SLOT */))
                             {
-                                //return;
                             }
                             // DROP FLOATING ITEMS
-                            if (isFloating(itemStack) || IWBConfig.floatBothWays && blockStateUnderPlayer.getBlock().isReplaceable(world, positionUnderPlayer))
+                            else if (isFloating(itemStack) || IWBConfig.floatBothWays && blockStateUnderPlayer.getBlock().isReplaceable(world, positionUnderPlayer))
                             {
                                 player.dropItem(itemStack, true, false);
                                 player.inventory.decrStackSize(i, itemStack.getCount());
+                                world.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_GENERIC_SWIM, SoundCategory.BLOCKS, 1.0F, 1.0F);
                             }
                         }
                     }

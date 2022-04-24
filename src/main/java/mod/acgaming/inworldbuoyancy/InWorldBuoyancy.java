@@ -14,11 +14,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 
-import mod.acgaming.inworldbuoyancy.config.IWBBuoyancyList;
+import mod.acgaming.inworldbuoyancy.config.IWBDropList;
 import mod.acgaming.inworldbuoyancy.config.IWBTransformList;
 
-@Mod(modid = InWorldBuoyancy.MODID, name = InWorldBuoyancy.NAME, version = "${version}", acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "after:betterwithmods")
+@Mod(modid = InWorldBuoyancy.MODID, name = InWorldBuoyancy.NAME, version = "${version}", acceptedMinecraftVersions = "[1.12,1.13)", dependencies = "after:hardcorebuoy")
 public class InWorldBuoyancy
 {
     public static final String MODID = "inworldbuoyancy";
@@ -28,12 +29,16 @@ public class InWorldBuoyancy
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
-        IWBBuoyancyList.list();
-        LOGGER.info("Buoyancy List Initialized");
+        LOGGER.info("IWB Initialized");
+    }
+
+    @Mod.EventHandler
+    public void postInit(FMLPostInitializationEvent event)
+    {
+        IWBDropList.list();
+        LOGGER.info("Drop List Initialized");
 
         IWBTransformList.list();
         LOGGER.info("Transform List Initialized");
-
-        LOGGER.info("IWB Initialized");
     }
 }

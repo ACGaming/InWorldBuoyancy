@@ -24,17 +24,17 @@ import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
 
-public class IWBBuoyancyList
+public class IWBDropList
 {
     private static final Set<Item> itemSet = Collections.newSetFromMap(new IdentityHashMap<>());
     private static final TIntSet oreSet = new TIntHashSet();
 
     public static void list()
     {
-        if (IWBConfig.customBuoyancyList.length > 0)
+        if (IWBConfig.customDropList.length > 0)
         {
-            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(IWBConfig.customBuoyancyList.length + " custom config entries found!");
-            for (String id : IWBConfig.customBuoyancyList)
+            if (IWBConfig.debug) InWorldBuoyancy.LOGGER.debug(IWBConfig.customDropList.length + " custom config entries found!");
+            for (String id : IWBConfig.customDropList)
             {
                 if (id.indexOf(':') >= 0)
                 {

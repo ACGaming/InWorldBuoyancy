@@ -22,8 +22,8 @@ import mod.acgaming.inworldbuoyancy.InWorldBuoyancy;
 public class IWBConfig
 {
     @Config.Name("Omit item in hand")
-    @Config.Comment({"[Not implemented] Exempts the item in the player's hand.", "Default = false"})
-    public static boolean omitItemInHand = false;
+    @Config.Comment({"Exempts the item in the player's hand.", "Default = true"})
+    public static boolean omitItemInHand = true;
 
     @Config.Name("Float both ways")
     @Config.Comment({"Makes non-floating items drop.", "Default = false"})
@@ -38,9 +38,9 @@ public class IWBConfig
     @Config.Comment({"Inventory is buoyant. Hah.", "Default = true"})
     public static boolean inWorldBuoyancy = true;
 
-    @Config.Name("Custom buoyancy list")
-    @Config.Comment({"Custom list of items to float.", "Use registry names (with :) or ore dictionary IDs (without :)."})
-    public static String[] customBuoyancyList = {"minecraft:stick"};
+    @Config.Name("Custom drop list")
+    @Config.Comment({"Custom list of items to drop.", "Use registry names (with :) or ore dictionary IDs (without :)."})
+    public static String[] customDropList = {"minecraft:stick"};
 
     @Config.Name("Custom transform list")
     @Config.Comment({"Custom list of items to transform.", "Use registry names (with :) or ore dictionary IDs (input only, without :).", "Use --> as a separator."})
@@ -65,8 +65,8 @@ public class IWBConfig
                 ConfigManager.sync(InWorldBuoyancy.MODID, Config.Type.INSTANCE);
                 InWorldBuoyancy.LOGGER.info("Config Synced");
 
-                IWBBuoyancyList.list();
-                InWorldBuoyancy.LOGGER.info("Buoyancy List Reloaded");
+                IWBDropList.list();
+                InWorldBuoyancy.LOGGER.info("Drop List Reloaded");
 
                 IWBTransformList.list();
                 InWorldBuoyancy.LOGGER.info("Transform List Reloaded");
