@@ -31,7 +31,7 @@ public class IWBConfig
 
     @Config.RequiresWorldRestart
     @Config.Name("Cannot displace liquid")
-    @Config.Comment({"[Experimental] Makes it impossible to easily displace liquids with blocks.", "Default = true"})
+    @Config.Comment({"[Experimental] Makes it impossible to easily displace liquids with blocks.", "Default = false"})
     public static boolean cannotDisplaceLiquid = false;
 
     @Config.Name("In-world buoyancy")
